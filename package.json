@@ -4,7 +4,9 @@
   "description": "Backend for both web and mobile chat app",
   "main": "src/index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "dev": "nodemon .",
+    "build": "node ."
   },
   "repository": {
     "type": "git",
