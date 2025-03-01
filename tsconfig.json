@@ -11,16 +11,7 @@
     "noImplicitReturns": true,
     "skipLibCheck": true,
     "rootDir": "./src",
-    "baseUrl": "./src",
-    "paths": {
-      "@definitions/*": ["definitions/*"],
-      "@components/*": ["components/*"],
-      "@configs/*": ["configs/*"],
-      "@injectors/*": ["injectors/*"],
-      "@middlewares/*": ["middlewares/*"],
-      "@types/*": ["types/*"],
-      "@interfaces/*": ["interfaces/*"]
-    }
+    "baseUrl": "./src"
   },
   "include": ["./src/**/*"],
   "exclude": ["node_modules"]
