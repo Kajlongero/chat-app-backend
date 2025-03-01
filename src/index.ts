@@ -15,6 +15,10 @@ import {
 import { ServerConfigs } from "./configs/index";
 import { CorsOpts } from "./configs/cors";
 
+import { writeKeys } from "./security/write.keys";
+
+writeKeys("HIGH");
+
 const app = express();
 const httpServer = createServer(app);
 

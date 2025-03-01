@@ -5,6 +5,7 @@ const {
   DB_CONNECTION_STRING,
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET,
+  RSA_KEY_PAIR_PASSPHRASE,
 } = process.env;
 
 export const ServerConfigs = {
@@ -14,6 +15,7 @@ export const ServerConfigs = {
 export const AuthConfigs = {
   ACCESS_TOKEN_SECRET: ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET: REFRESH_TOKEN_SECRET,
+  RSA_KEY_PAIR_PASSPHRASE: RSA_KEY_PAIR_PASSPHRASE,
 };
 
 export const DbConfigs = {

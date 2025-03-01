@@ -9,7 +9,7 @@ import {
 } from "passport-jwt";
 import { Strategy } from "passport-local";
 
-import { AuthConfigs } from "@configs/index";
+import { AuthConfigs } from "../configs/index";
 
 // Jwt Strategies
 
