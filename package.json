@@ -2,11 +2,11 @@
   "name": "chat-app-server",
   "version": "1.0.0",
   "description": "Backend for both web and mobile chat app",
-  "main": "src/index.js",
+  "main": "src/index.ts",
   "scripts": {
     "test": "jest",
-    "dev": "nodemon .",
-    "build": "node ."
+    "dev": "tsc && nodemon .",
+    "build": "tsc"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
   "homepage": "https://github.com/Kajlongero/chat-app-backend#readme",
   "dependencies": {
     "@hapi/boom": "^10.0.1",
+    "@types/bcrypt": "^5.0.2",
     "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
@@ -47,8 +48,18 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.5",
+    "@types/passport": "^1.0.17",
+    "@types/passport-jwt": "^4.0.1",
+    "@types/passport-local": "^1.0.38",
+    "@types/pg": "^8.11.11",
     "cross-env": "^7.0.3",
     "jest": "^29.7.0",
-    "supertest": "^7.0.0"
+    "nodemon": "^3.1.9",
+    "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.2"
   }
 }
