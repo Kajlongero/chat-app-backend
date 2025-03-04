@@ -4,8 +4,11 @@ CREATE DATABASE chat_app
        LC_COLLATE = 'es_ES.utf8'
        LC_CTYPE = 'es_ES.utf8';
 
+\c chat_app
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE SCHEMA IF NOT EXISTS app;
 CREATE SCHEMA IF NOT EXISTS files;
+CREATE SCHEMA IF NOT EXISTS commons;
 CREATE SCHEMA IF NOT EXISTS security;

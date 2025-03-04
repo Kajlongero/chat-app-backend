@@ -8,6 +8,30 @@ CREATE TABLE IF NOT EXISTS security.users (
 
 CREATE INDEX idx_users_username ON security.users(username);
 
+CREATE TABLE IF NOT EXISTS security.phone_numbers (
+  id SERIAL NOT NULL PRIMARY KEY,
+  user_id UUID NOT NULL UNIQUE,
+  phone_number TEXT NOT NULL,
+  region_id INTEGER NOT NULL,
+  verified BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ,
+  deleted_at TIMESTAMPTZ,
+  CONSTRAINT fk_phone_numbers_user_id
+    FOREIGN KEY (user_id)
+    REFERENCES security.users(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE,
+  CONSTRAINT fk_phone_numbers_region_id 
+    FOREIGN KEY (region_id) 
+    REFERENCES commons.regions(id)
+    ON UPDATE CASCADE 
+    ON DELETE CASCADE
+);
+
+CREATE INDEX idx_phone_numbers_user_id ON security.phone_numbers(user_id);
+CREATE INDEX idx_phone_numbers_region_id ON security.phone_numbers(region_id);
+
 CREATE TABLE IF NOT EXISTS security.profile (
   id SERIAL NOT NULL PRIMARY KEY,
   first_name VARCHAR(32),
@@ -74,10 +98,18 @@ CREATE TABLE IF NOT EXISTS security.auth (
   banned BOOLEAN NOT NULL DEFAULT false,
   blocked BOOLEAN NOT NULL DEFAULT false,
   restricted BOOLEAN NOT NULL DEFAULT false,
+  user_id UUID NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ,
-  deleted_at TIMESTAMPTZ
+  deleted_at TIMESTAMPTZ,
+  CONSTRAINT fk_auth_user_id 
+    FOREIGN KEY (user_id)
+    REFERENCES security.users(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
 );
+
+CREATE INDEX idx_auth_user_id ON security.auth(user_id);
 
 CREATE TABLE IF NOT EXISTS security.auth_roles (
   role_id INTEGER,

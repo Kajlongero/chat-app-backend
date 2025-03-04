@@ -35,6 +35,8 @@ const io = new Server(httpServer);
 
 io.on("connection", (socket) => {});
 
+export { app };
+
 httpServer.listen(ServerConfigs.SERVER_PORT, () => {
   console.log(`Listening at port: ${ServerConfigs.SERVER_PORT}`);
 });

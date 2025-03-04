@@ -1,0 +1,65 @@
+{
+  "postgres": {
+    "user": {
+      "getUserById": "SELECT id, username, created_at as createdAt FROM security.users WHERE id = $1",
+      "getUserByUsername": "SELECT id, username, created_at as createdAt FROM security.users WHERE username = $1",
+      "auth": {
+        "getUserIdByAuthId": "SELECT u.id as id FROM security.users u JOIN security.auth ON auth.id = $1",
+        "getAuthInfoById": "SELECT id, email, password FROM security.auth_info WHERE id = $1",
+        "getAuthInfoByEmail": "SELECT id, email, password, auth_id FROM security.auth_info WHERE email = $1",
+        "getUserRoles": "SELECT r.id as id, r.name as name FROM security.roles as r JOIN security.auth_roles as ar ON ar.role_id = r.id JOIN security.auth as a ON a.id = ar.auth_id WHERE a.id = $1",
+        "registerUser": "SELECT * FROM security.register_user($1, $2, $3)",
+        "session": {
+          "getSessionById": "SELECT * FROM security.active_sessions WHERE id = $1",
+          "getSessionByJti": "SELECT * FROM security.active_sessions WHERE jti = $1",
+          "getSessionByAuthId": "SELECT * FROM security.active_sessions WHERE auth_id = $1",
+          "createSession": "SELECT * FROM security.create_session($1, $2, $3, $4)",
+          "deleteSessionById": "DELETE FROM security.active_sessions WHERE id = $1"
+        }
+      },
+      "profile": {}
+    }
+  },
+  "mysql": {
+    "user": {
+      "getUserById": "",
+      "getUserByUsername": "",
+      "auth": {
+        "getUserIdByAuthId": "",
+        "getAuthInfoById": "",
+        "getAuthInfoByEmail": "",
+        "getUserRoles": "",
+        "registerUser": "",
+        "session": {
+          "getSessionById": "",
+          "getSessionByJti": "",
+          "getSessionByAuthId": "",
+          "createSession": "",
+          "deleteSessionById": ""
+        }
+      },
+      "profile": {}
+    }
+  },
+  "mariadb": {
+    "user": {
+      "getUserById": "",
+      "getUserByUsername": "",
+      "auth": {
+        "getUserIdByAuthId": "",
+        "getAuthInfoById": "",
+        "getAuthInfoByEmail": "",
+        "getUserRoles": "",
+        "registerUser": "",
+        "session": {
+          "getSessionById": "",
+          "getSessionByJti": "",
+          "getSessionByAuthId": "",
+          "createSession": "",
+          "deleteSessionById": ""
+        }
+      },
+      "profile": {}
+    }
+  }
+}

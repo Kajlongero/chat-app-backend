@@ -7,7 +7,7 @@ import { promisify } from "util";
 
 import { keysDir } from "../keys";
 import { genKeys } from "./generate.rsa";
-import { KeyPair, SECURITY_LEVEL } from "../types/security.level";
+import { KeyPair, SECURITY_LEVEL } from "../types/security.dto";
 
 const dir = promisify(mkdir);
 const write = promisify(writeFile);

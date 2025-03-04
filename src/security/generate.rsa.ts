@@ -5,11 +5,7 @@ import { RSAKeyPairOptions } from "node:crypto";
 import { badData } from "@hapi/boom";
 
 import { AuthConfigs } from "../configs";
-import {
-  KeyPair,
-  SECURITY_LEVEL,
-  SECURITY_SIZE,
-} from "../types/security.level";
+import { KeyPair, SECURITY_LEVEL, SECURITY_SIZE } from "../types/security.dto";
 
 const keyPair = promisify(generateKeyPair);
 
