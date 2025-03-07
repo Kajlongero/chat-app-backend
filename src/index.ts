@@ -1,9 +1,18 @@
 import cors from "cors";
 import express from "express";
+import passport from "passport";
 import { Server } from "socket.io";
 import { createServer } from "http";
 
-import * as _ from "./security/passport.strategies";
+import {
+  AccessJwtBearerStrategy,
+  RefreshJwtBodyStrategy,
+  RefreshJwtHeaderStrategy,
+} from "./security/passport.strategies";
+
+passport.use("jwt-bearer", AccessJwtBearerStrategy);
+passport.use("jwt-header", RefreshJwtHeaderStrategy);
+passport.use("jwt-body", RefreshJwtBodyStrategy);
 
 import apiRouter from "./definitions/api";
 

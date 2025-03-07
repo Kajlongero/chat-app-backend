@@ -15,6 +15,10 @@ export class DBPostgresInjector implements IDBDependenciesInjectorModel {
     return data as T;
   }
 
+  async uniqueQuery<T>(str: string, params: any[]) {
+    return true as T;
+  }
+
   public get totalCount() {
     return this.pool.totalCount;
   }

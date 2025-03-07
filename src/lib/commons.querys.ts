@@ -1,7 +1,10 @@
-import { DBDependenciesInjector } from "../db/injector";
-import { DbQueries } from "../db";
+import { unauthorized } from "@hapi/boom";
 
-import { AuthInfo, User } from "../types/user.dto";
+import { DbQueries } from "../db";
+import { DBDependenciesInjector } from "../db/injector";
+
+import { ActiveSession, AuthInfo, User } from "../types/user.dto";
+import { RefreshTokenPayload } from "../security/jwt/types/jwt.dto";
 import { Engine } from "../db/injector/types/engine";
 
 export class DBCommonsQuerys {
@@ -13,22 +16,48 @@ export class DBCommonsQuerys {
     this._engine = engine;
   }
 
-  public async getInfoByEmail(email: string): Promise<AuthInfo> {
+  public async getInfoByEmail(email: string): Promise<AuthInfo | null> {
     const data = await this._database.query<AuthInfo[]>(
       DbQueries[this._engine].user.auth.getAuthInfoByEmail,
       [email]
     );
+    if (data.length) return data[0];
 
-    return data[0];
+    return null;
   }
 
-  public async getByUsername(username: string): Promise<User> {
+  public async getByUsername(username: string): Promise<User | null> {
     const data = await this._database.query<User[]>(
       DbQueries[this._engine].user.auth.getAuthInfoByEmail,
       [username]
     );
-    return data[0];
+    if (data.length) return data[0];
+
+    return null;
   }
 
-  public async getByUserId(id: string) {}
+  public async getByUserId(id: string): Promise<User | null> {
+    const data = await this._database.query<User[]>(
+      DbQueries[this._engine].user.getUserById,
+      [id]
+    );
+    if (data.length) return data[0];
+
+    return null;
+  }
+
+  public async verifySessionAndIfUserExists(payload: RefreshTokenPayload) {
+    const { sub, jti } = payload;
+
+    const existsSession = await this._database.query<ActiveSession[]>(
+      DbQueries[this._engine].user.auth.session.getSessionByRtJti,
+      [jti]
+    );
+    if (!existsSession.length) throw unauthorized();
+
+    const existsUser = await this.getByUserId(sub as string);
+    if (!existsUser) throw unauthorized();
+
+    return existsSession;
+  }
 }

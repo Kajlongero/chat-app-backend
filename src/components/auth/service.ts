@@ -16,7 +16,7 @@ import { DBDependenciesInjector } from "../../db/injector";
 import { DbQueries } from "../../db";
 
 import { LoginCredentials, RegisterCredentials } from "./types/credentials.dto";
-import { AuthInfo, User } from "../../types/user.dto";
+import { ActiveSession, Auth, AuthInfo, User } from "../../types/user.dto";
 import { DBCommonsQuerys } from "../../lib/commons.querys";
 
 import type { Engine } from "../../db/injector/types/engine";
@@ -57,50 +57,43 @@ export class AuthService extends DBCommonsQuerys {
 
     const hash = await bcrypt.hash(password, 10);
 
-    const res = await this.database.query<RegisterResponse[]>(
+    const register = await this.database.query<RegisterResponse[]>(
       this.queries.user.auth.registerUser,
       [username, email, hash]
     );
-
-    const register = res[0];
-
+    const res = register[0];
     const keys = await genKeys("MEDIUM");
-    const jti = crypto.randomUUID();
+
+    const session = await this.database.query<ActiveSession[]>(
+      this.queries.user.auth.session.createSession,
+      [res.auth_id, "6 month", keys.publicKey]
+    );
+    if (!session.length) throw expectationFailed();
+
+    const ses = session[0];
 
     const accessTokenPayload: AccessTokenPayload = {
-      sub: register.user_id,
-      jti,
+      sub: res.user_id,
+      jti: ses.at_jti,
       aud: ["access_app_token"],
-      roles: [register.role_name],
+      roles: [res.role_name],
       exp: Date.now() + 1000 * 60 * 60 * 24 * 30,
       iat: Date.now(),
     };
 
     const refreshTokenPayload: RefreshTokenPayload = {
-      sub: register.user_id,
-      jti,
+      sub: res.user_id,
+      jti: ses.rt_jti,
       aud: ["refresh_app_token"],
       exp: Date.now() + 1000 * 60 * 60 * 24 * 30 * 6,
       iat: Date.now(),
     };
 
-    const session = await this.database.query<
-      { readonly session_id: number }[]
-    >(this.queries.user.auth.session.createSession, [
-      register.auth_id,
-      jti,
-      keys.publicKey,
-      "6 month",
-    ]);
-    if (!session.length) throw expectationFailed();
-
     const accessToken = SignAccessToken(accessTokenPayload);
     const refreshToken = SignRefreshToken(refreshTokenPayload);
 
-    console.log(session[0]);
-
     return {
-      sessionId: session[0].session_id,
+      sessionId: ses.id,
       privateKey: keys.privateKey,
       accessToken,
       refreshToken,
@@ -116,10 +109,12 @@ export class AuthService extends DBCommonsQuerys {
     const compare = await bcrypt.compare(password, existEmail.password);
     if (!compare) throw unauthorized("Email or password invalid");
 
-    const { id: userId } = await this.database.query<{ id: string }>(
+    const users = await this.database.query<{ id: string }[]>(
       this.queries.user.auth.getUserIdByAuthId,
       [existEmail.auth_id]
     );
+
+    const user = users[0];
 
     const roles = await this.database.query<Roles[]>(
       this.queries.user.auth.getUserRoles,
@@ -127,11 +122,18 @@ export class AuthService extends DBCommonsQuerys {
     );
 
     const keys = await genKeys("MEDIUM");
-    const jti = crypto.randomUUID();
+
+    const session = await this.database.query<ActiveSession[]>(
+      this.queries.user.auth.session.createSession,
+      [existEmail.auth_id, "6 month", keys.publicKey]
+    );
+    if (!session.length) throw expectationFailed();
+
+    const ses = session[0];
 
     const accessTokenPayload: AccessTokenPayload = {
-      jti,
-      sub: userId,
+      sub: user.id,
+      jti: ses.at_jti,
       aud: ["access_app_token"],
       roles: roles.map((role) => role.name),
       exp: Date.now() + 1000 * 60 * 60 * 24 * 30,
@@ -139,31 +141,136 @@ export class AuthService extends DBCommonsQuerys {
     };
 
     const refreshTokenPayload: RefreshTokenPayload = {
-      jti,
-      sub: userId,
+      sub: user.id,
+      jti: ses.rt_jti,
       aud: ["refresh_app_token"],
       exp: Date.now() + 1000 * 60 * 60 * 24 * 30 * 6,
       iat: Date.now(),
     };
 
-    const session = await this.database.query<
-      { readonly session_id: number }[]
-    >(this.queries.user.auth.session.createSession, [
-      existEmail.auth_id,
-      jti,
-      keys.publicKey,
-      "6 month",
-    ]);
-    if (!session.length) throw expectationFailed();
+    const accessToken = SignAccessToken(accessTokenPayload);
+    const refreshToken = SignRefreshToken(refreshTokenPayload);
+
+    return {
+      sessionId: ses.id,
+      privateKey: keys.privateKey,
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async refreshSession(payload: RefreshTokenPayload) {
+    const { sub, jti } = payload;
+
+    const existsSession = await this.verifySessionAndIfUserExists(payload);
+
+    const updateSessions = await this.database.query<ActiveSession[]>(
+      this.queries.user.auth.session.refreshSession,
+      ["6 month"]
+    );
+    const session = updateSessions[0];
+
+    const roles = await this.database.query<Roles[]>(
+      this.queries.user.auth.getUserRoles,
+      [session.auth_id]
+    );
+
+    const accessTokenPayload: AccessTokenPayload = {
+      sub,
+      jti: session.at_jti,
+      aud: ["access_app_token"],
+      roles: roles.map((role) => role.name),
+      exp: Date.now() + 1000 * 60 * 60 * 24 * 30,
+      iat: Date.now(),
+    };
+
+    const refreshTokenPayload: RefreshTokenPayload = {
+      sub,
+      jti: session.rt_jti,
+      aud: ["refresh_app_token"],
+      exp: Date.now() + 1000 * 60 * 60 * 24 * 30 * 6,
+      iat: Date.now(),
+    };
 
     const accessToken = SignAccessToken(accessTokenPayload);
     const refreshToken = SignRefreshToken(refreshTokenPayload);
 
     return {
-      sessionId: session[0].session_id,
-      privateKey: keys.privateKey,
+      sessionId: session.id,
       accessToken,
       refreshToken,
     };
+  }
+
+  async closeSession(access: AccessTokenPayload, refresh: RefreshTokenPayload) {
+    const { jti: jtiAccess } = access;
+
+    const existsSession = await this.verifySessionAndIfUserExists(refresh);
+
+    const session = existsSession[0];
+    if (session.at_jti !== jtiAccess) throw unauthorized();
+
+    const deleteSession = await this.database.query(
+      this.queries.user.auth.session.deleteSessionById,
+      [session.id]
+    );
+
+    return true;
+  }
+
+  async closeAnotherSession(
+    access: AccessTokenPayload,
+    refresh: RefreshTokenPayload,
+    sessionId: number
+  ) {
+    const { sub } = refresh;
+    const { jti: jtiAccess } = access;
+
+    const existsSession = await this.verifySessionAndIfUserExists(refresh);
+
+    const session = existsSession[0];
+    if (session.at_jti !== jtiAccess) throw unauthorized();
+
+    const authInfo = await this.database.query<Auth[]>(
+      this.queries.user.auth.getAuthByUserId,
+      [sub]
+    );
+    if (!authInfo.length) throw unauthorized();
+
+    const existsSessionToClose = await this.database.query<ActiveSession[]>(
+      this.queries.user.auth.session.getSessionById,
+      [sessionId]
+    );
+    if (!existsSessionToClose.length) throw notFound("Session not found");
+
+    const auth = authInfo[0];
+    const sessionToClose = existsSessionToClose[0];
+
+    if (sessionToClose.auth_id !== auth.id) throw unauthorized();
+
+    await this.database.query(
+      this.queries.user.auth.session.deleteSessionById,
+      [sessionId]
+    );
+
+    return true;
+  }
+
+  async deleteUser(access: AccessTokenPayload, refresh: RefreshTokenPayload) {
+    const { sub } = refresh;
+    const { jti: jtiAccess } = access;
+
+    const existsSession = await this.verifySessionAndIfUserExists(refresh);
+
+    const session = existsSession[0];
+    if (session.at_jti !== jtiAccess) throw unauthorized();
+
+    const deleted = await this.database.query<User[]>(
+      this.queries.user.deleteUserById,
+      [sub]
+    );
+    const user = deleted[0];
+
+    return user.id;
   }
 }

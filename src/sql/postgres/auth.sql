@@ -131,7 +131,8 @@ CREATE INDEX idx_auth_roles_auth_id ON security.auth_roles(auth_id);
 
 CREATE TABLE IF NOT EXISTS security.active_sessions (
   id BIGSERIAL NOT NULL PRIMARY KEY,
-  jti VARCHAR NOT NULL,
+  at_jti VARCHAR NOT NULL DEFAULT uuid_generate_v4(),
+  rt_jti VARCHAR NOT NULL DEFAULT uuid_generate_v4(),
   auth_id INTEGER NOT NULL,
   active BOOLEAN DEFAULT true,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -147,6 +148,8 @@ CREATE TABLE IF NOT EXISTS security.active_sessions (
 );
 
 CREATE INDEX idx_active_sessions_auth_id ON security.active_sessions(auth_id);
+CREATE INDEX idx_active_sessions_at_jti ON security.active_sessions(at_jti);
+CREATE INDEX idx_active_sessions_rt_jti ON security.active_sessions(rt_jti);
 
 CREATE TABLE IF NOT EXISTS security.auth_info (
   id SERIAL NOT NULL PRIMARY KEY,

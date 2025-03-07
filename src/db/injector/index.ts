@@ -16,6 +16,13 @@ export class DBDependenciesInjector implements IDBDependenciesInjectorModel {
     return results;
   }
 
+  async uniqueQuery<T>(str: string, params: any[]): Promise<T> {
+    const elements = await this.query(str, params);
+    const res = elements as T[];
+
+    return res[0];
+  }
+
   get totalCount(): number {
     return this.database.totalCount;
   }

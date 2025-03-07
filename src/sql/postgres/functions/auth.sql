@@ -57,23 +57,22 @@ $$ language plpgsql;
 
 CREATE OR REPLACE FUNCTION security.create_session (
   p_auth_id INTEGER,
-  p_jti VARCHAR,
-  p_public_key TEXT,
-  p_interval INTERVAL
+  p_interval INTERVAL,
+  p_public_key TEXT
 ) 
-RETURNS TABLE (
-  session_id BIGINT
-) AS $$ 
+RETURNS TABLE (LIKE security.active_sessions) 
+AS $$ 
 DECLARE
+  t_session_id BIGINT;
   t_time_w_interval TIMESTAMPTZ;
 BEGIN
   t_time_w_interval := NOW() + p_interval;
 
-  INSERT INTO security.active_sessions (auth_id, jti, public_key, expires_at)
-  VALUES (p_auth_id, p_jti, p_public_key, t_time_w_interval)
-  RETURNING id INTO session_id;
+  INSERT INTO security.active_sessions (auth_id, public_key, expires_at)
+  VALUES (p_auth_id, p_public_key, t_time_w_interval)
+  RETURNING id INTO t_session_id;
 
-  RETURN QUERY SELECT session_id;
+  RETURN QUERY SELECT * FROM security.active_sessions WHERE id = t_session_id;
 EXCEPTION
   WHEN OTHERS THEN
     RAISE NOTICE 'Failed to create session due to an error: %', SQLERRM;

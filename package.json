@@ -4,9 +4,9 @@
   "description": "Backend for both web and mobile chat app",
   "main": "src/index.ts",
   "scripts": {
-    "test": "jest",
-    "dev": "tsc && nodemon .",
-    "build": "tsc"
+    "test": "jest --forceExit --detectOpenHandles",
+    "dev": "nodemon .",
+    "build": "tsc && node ."
   },
   "repository": {
     "type": "git",

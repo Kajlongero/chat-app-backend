@@ -59,4 +59,29 @@ export const authMocks = {
       password: "1234567890123456789012345678901234567",
     },
   },
+  refresh: {
+    correct: {
+      email: "refresh@mail.com",
+      password: "12345678",
+      username: "pepito2",
+    },
+  },
+  authRefreshAndClose: {
+    signupCorrect: {
+      email: "signuprefreshandclose@mail.com",
+      password: "12121212",
+      username: "test123",
+    },
+    loginCorrect: {
+      email: "signuprefreshandclose@mail.com",
+      password: "12121212",
+    },
+  },
+  authCreateAndDelete: {
+    createCorrect: {
+      email: "createanddelete@mail.com",
+      password: "12121212",
+      username: "deleted123",
+    },
+  },
 };

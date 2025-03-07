@@ -1,6 +1,6 @@
 import { verify } from "jsonwebtoken";
 
-import { AuthConfigs } from "configs";
+import { AuthConfigs } from "../../configs";
 
 import type { AccessTokenPayload, RefreshTokenPayload } from "./types/jwt.dto";
 

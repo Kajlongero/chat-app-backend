@@ -131,6 +131,9 @@ dist
 
 # security keys
 
+*.pem
+
 src/keys/private/
 src/keys/public/
+
 
