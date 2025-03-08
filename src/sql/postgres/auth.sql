@@ -151,6 +151,25 @@ CREATE INDEX idx_active_sessions_auth_id ON security.active_sessions(auth_id);
 CREATE INDEX idx_active_sessions_at_jti ON security.active_sessions(at_jti);
 CREATE INDEX idx_active_sessions_rt_jti ON security.active_sessions(rt_jti);
 
+CREATE TABLE IF NOT EXISTS security.auth_recovery (
+  id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
+  auth_id INTEGER NOT NULL,
+  code INTEGER NOT NULL,
+  token VARCHAR NOT NULL, 
+  attempts INTEGER NOT NULL DEFAULT 0,
+  expires_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ,
+  CONSTRAINT fk_auth_recovery_auth_id
+    FOREIGN KEY (auth_id)
+    REFERENCES security.auth(id)
+    ON UPDATE CASCADE 
+    ON DELETE CASCADE
+);
+
+CREATE INDEX idx_auth_recovery_token ON security.auth_recovery(token);
+CREATE INDEX idx_auth_recovery_auth_id ON security.auth_recovery(auth_id);
+
 CREATE TABLE IF NOT EXISTS security.auth_info (
   id SERIAL NOT NULL PRIMARY KEY,
   email VARCHAR(120) UNIQUE NOT NULL,

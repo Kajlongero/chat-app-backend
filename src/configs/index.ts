@@ -8,10 +8,14 @@ const {
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET,
   RSA_KEY_PAIR_PASSPHRASE,
+  RESEND_API_KEY,
+  EMAIL_TO_SEND_MAIL,
 } = process.env;
 
 export const ServerConfigs = {
   SERVER_PORT: parseInt(SERVER_PORT as string),
+  RESEND_API_KEY,
+  EMAIL_TO_SEND_MAIL,
 };
 
 export const AuthConfigs = {

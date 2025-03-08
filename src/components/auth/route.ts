@@ -18,6 +18,11 @@ import {
   RefreshTokenPayload,
 } from "../../security/jwt/types/jwt.dto";
 import { VerifyRefreshToken } from "../../security/jwt/verify.jwt";
+import { RefreshTokenMiddleware } from "../../middlewares/refresh.token.validator";
+import {
+  AccessSessionValidator,
+  RefreshSessionValidator,
+} from "../../middlewares/session.validator";
 
 const publicKey = fs.readFileSync(path.join(keysDir, "public", "public.pem"));
 

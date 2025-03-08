@@ -31,6 +31,7 @@ import {
   RefreshTokenPayload,
 } from "../../security/jwt/types/jwt.dto";
 import { Roles } from "./types/roles.dto";
+import { CommonsResponses } from "../../responses/commons.responses";
 
 export class AuthService extends DBCommonsQuerys {
   private database: DBDependenciesInjector;
@@ -50,10 +51,10 @@ export class AuthService extends DBCommonsQuerys {
     const { username, email, password } = data;
 
     const existUsername = await this.getByUsername(username);
-    if (existUsername) throw conflict("Username already taken");
+    if (existUsername) throw conflict(CommonsResponses.en[409].username);
 
     const existEmail = await this.getInfoByEmail(email);
-    if (existEmail) throw conflict("Email already taken");
+    if (existEmail) throw conflict(CommonsResponses.en[409].email);
 
     const hash = await bcrypt.hash(password, 10);
 
@@ -68,7 +69,8 @@ export class AuthService extends DBCommonsQuerys {
       this.queries.user.auth.session.createSession,
       [res.auth_id, "6 month", keys.publicKey]
     );
-    if (!session.length) throw expectationFailed();
+    if (!session.length)
+      throw expectationFailed(CommonsResponses.en[417].generic);
 
     const ses = session[0];
 
@@ -127,7 +129,8 @@ export class AuthService extends DBCommonsQuerys {
       this.queries.user.auth.session.createSession,
       [existEmail.auth_id, "6 month", keys.publicKey]
     );
-    if (!session.length) throw expectationFailed();
+    if (!session.length)
+      throw expectationFailed(CommonsResponses.en[417].generic);
 
     const ses = session[0];
 
@@ -229,24 +232,27 @@ export class AuthService extends DBCommonsQuerys {
     const existsSession = await this.verifySessionAndIfUserExists(refresh);
 
     const session = existsSession[0];
-    if (session.at_jti !== jtiAccess) throw unauthorized();
+    if (session.at_jti !== jtiAccess)
+      throw unauthorized(CommonsResponses.en[401].generic);
 
     const authInfo = await this.database.query<Auth[]>(
       this.queries.user.auth.getAuthByUserId,
       [sub]
     );
-    if (!authInfo.length) throw unauthorized();
+    if (!authInfo.length) throw unauthorized(CommonsResponses.en[401].generic);
 
     const existsSessionToClose = await this.database.query<ActiveSession[]>(
       this.queries.user.auth.session.getSessionById,
       [sessionId]
     );
-    if (!existsSessionToClose.length) throw notFound("Session not found");
+    if (!existsSessionToClose.length)
+      throw notFound(CommonsResponses.en[404].session);
 
     const auth = authInfo[0];
     const sessionToClose = existsSessionToClose[0];
 
-    if (sessionToClose.auth_id !== auth.id) throw unauthorized();
+    if (sessionToClose.auth_id !== auth.id)
+      throw unauthorized(CommonsResponses.en[401].generic);
 
     await this.database.query(
       this.queries.user.auth.session.deleteSessionById,
@@ -263,7 +269,8 @@ export class AuthService extends DBCommonsQuerys {
     const existsSession = await this.verifySessionAndIfUserExists(refresh);
 
     const session = existsSession[0];
-    if (session.at_jti !== jtiAccess) throw unauthorized();
+    if (session.at_jti !== jtiAccess)
+      throw unauthorized(CommonsResponses.en[401].generic);
 
     const deleted = await this.database.query<User[]>(
       this.queries.user.deleteUserById,
@@ -272,5 +279,10 @@ export class AuthService extends DBCommonsQuerys {
     const user = deleted[0];
 
     return user.id;
+  }
+
+  async requestPasswordChange(email: string) {
+    const existsEmail = await this.getInfoByEmail(email);
+    if (!existsEmail) return CommonsResponses.en[200].emailSent;
   }
 }

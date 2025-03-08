@@ -6,6 +6,7 @@ import { DBDependenciesInjector } from "../db/injector";
 import { ActiveSession, AuthInfo, User } from "../types/user.dto";
 import { RefreshTokenPayload } from "../security/jwt/types/jwt.dto";
 import { Engine } from "../db/injector/types/engine";
+import { CommonsResponses } from "../responses/commons.responses";
 
 export class DBCommonsQuerys {
   private _database: DBDependenciesInjector;
@@ -53,10 +54,11 @@ export class DBCommonsQuerys {
       DbQueries[this._engine].user.auth.session.getSessionByRtJti,
       [jti]
     );
-    if (!existsSession.length) throw unauthorized();
+    if (!existsSession.length)
+      throw unauthorized(CommonsResponses.en[401].generic);
 
     const existsUser = await this.getByUserId(sub as string);
-    if (!existsUser) throw unauthorized();
+    if (!existsUser) throw unauthorized(CommonsResponses.en[401].generic);
 
     return existsSession;
   }

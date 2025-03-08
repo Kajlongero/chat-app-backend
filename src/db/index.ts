@@ -8,4 +8,4 @@ import DbQueries from "../sql/querys.json";
 const PostgresInstance = new DBPostgresInjector(pool);
 const DBPostgres = new DBDependenciesInjector(PostgresInstance);
 
-export { DbQueries, DBPostgres };
+export { DbQueries, PostgresInstance, DBPostgres };
