@@ -9,14 +9,18 @@ export const CommonsResponses = {
     },
     401: {
       generic: "You do not have permissions to perform this action",
+      invalidCode: "Invalid code",
+      tokenExpired: "Token expired",
       invalidCredentials: "Invalid credentials",
     },
     403: {
       generic: "Forbidden action",
+      notTime: "Please try again later",
     },
     404: {
       generic: "Resource not found",
       session: "Session not found",
+      email: "Email not found",
     },
     406: {},
     409: {

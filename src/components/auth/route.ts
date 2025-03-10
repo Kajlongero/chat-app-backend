@@ -9,6 +9,7 @@ import { DBPostgres } from "../../db";
 import { AuthService } from "./service";
 import { SuccessResponse } from "../../responses/success.responses";
 import { ValidateJoiSchema } from "../../middlewares/joi.validator";
+import { RefreshTokenMiddleware } from "../../middlewares/refresh.token.validator";
 import { loginSchema, registerSchema } from "./model";
 
 import { CredentialsAuthResponse } from "./types/responses.dto";
@@ -17,12 +18,6 @@ import {
   AccessTokenPayload,
   RefreshTokenPayload,
 } from "../../security/jwt/types/jwt.dto";
-import { VerifyRefreshToken } from "../../security/jwt/verify.jwt";
-import { RefreshTokenMiddleware } from "../../middlewares/refresh.token.validator";
-import {
-  AccessSessionValidator,
-  RefreshSessionValidator,
-} from "../../middlewares/session.validator";
 
 const publicKey = fs.readFileSync(path.join(keysDir, "public", "public.pem"));
 
@@ -91,13 +86,11 @@ AuthRouter.post(
 AuthRouter.post(
   "/close-session",
   passport.authenticate("jwt-bearer", { session: false }),
+  RefreshTokenMiddleware,
   async (req, res, next) => {
     try {
-      const refreshToken = req.body.refreshToken;
-      const refreshPayload = VerifyRefreshToken(refreshToken);
-
+      const refreshPayload = req.refresh as unknown as RefreshTokenPayload;
       const accessPayload = req.user as AccessTokenPayload;
-      console.log(refreshPayload, accessPayload);
 
       const closed = await authService.closeSession(
         accessPayload,
@@ -114,13 +107,13 @@ AuthRouter.post(
 AuthRouter.post(
   "/close-other-session",
   passport.authenticate("jwt-bearer", { session: false }),
+  RefreshTokenMiddleware,
   async (req, res, next) => {
     try {
       const sessionId = parseInt(req.body.sessionId) as number;
-      const refreshToken = req.body.refreshToken;
-      const refreshPayload = VerifyRefreshToken(refreshToken);
-
+      const refreshPayload = req.refresh as unknown as RefreshTokenPayload;
       const accessPayload = req.user as AccessTokenPayload;
+
       const closed = await authService.closeAnotherSession(
         accessPayload,
         refreshPayload,
@@ -137,12 +130,12 @@ AuthRouter.post(
 AuthRouter.delete(
   "/delete-user",
   passport.authenticate("jwt-bearer", { session: false }),
+  RefreshTokenMiddleware,
   async (req, res, next) => {
     try {
-      const refreshToken = req.body.refreshToken;
-      const refreshPayload = VerifyRefreshToken(refreshToken);
-
+      const refreshPayload = req.refresh as RefreshTokenPayload;
       const accessPayload = req.user as AccessTokenPayload;
+
       const deleted = await authService.deleteUser(
         accessPayload,
         refreshPayload

@@ -12,6 +12,7 @@ export type Auth = {
   blocked: boolean;
   restricted: boolean;
   user_id: string;
+  password_recovery_until: string;
   created_at: string;
   updated_at: string;
   deleted_at: string;
@@ -25,6 +26,18 @@ export type AuthInfo = {
   created_at: string;
   updated_at: string;
   deleted_at: string;
+};
+
+export type AuthRecovery = {
+  id: string;
+  code: number;
+  auth_id: number;
+  attempts: number;
+  change_token: string;
+  verification_token: string;
+  expires_at: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export type ActiveSession = {

@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS security.auth (
   banned BOOLEAN NOT NULL DEFAULT false,
   blocked BOOLEAN NOT NULL DEFAULT false,
   restricted BOOLEAN NOT NULL DEFAULT false,
+  password_recovery_until TIMESTAMPTZ,
   user_id UUID NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ,
@@ -155,7 +156,8 @@ CREATE TABLE IF NOT EXISTS security.auth_recovery (
   id UUID NOT NULL DEFAULT uuid_generate_v4() PRIMARY KEY,
   auth_id INTEGER NOT NULL,
   code INTEGER NOT NULL,
-  token VARCHAR NOT NULL, 
+  change_token VARCHAR NOT NULL, 
+  verification_token VARCHAR NOT NULL, 
   attempts INTEGER NOT NULL DEFAULT 0,
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -167,8 +169,9 @@ CREATE TABLE IF NOT EXISTS security.auth_recovery (
     ON DELETE CASCADE
 );
 
-CREATE INDEX idx_auth_recovery_token ON security.auth_recovery(token);
 CREATE INDEX idx_auth_recovery_auth_id ON security.auth_recovery(auth_id);
+CREATE INDEX idx_auth_recovery_change_token ON security.auth_recovery(change_token);
+CREATE INDEX idx_auth_recovery_verification_token ON security.auth_recovery(verification_token);
 
 CREATE TABLE IF NOT EXISTS security.auth_info (
   id SERIAL NOT NULL PRIMARY KEY,

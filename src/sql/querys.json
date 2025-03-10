@@ -5,11 +5,13 @@
       "getUserByUsername": "SELECT id, username, created_at as createdAt FROM security.users WHERE username = $1",
       "deleteUserById": "DELETE FROM security.users WHERE id = $1 RETURNING *",
       "auth": {
-        "getAuthInfoById": "SELECT id, email, password FROM security.auth_info WHERE id = $1",
+        "getAuthInfoById": "SELECT * FROM security.auth_info WHERE id = $1",
         "getAuthByUserId": "SELECT * FROM security.auth WHERE user_id = $1",
         "getUserIdByAuthId": "SELECT u.id as id FROM security.users as u JOIN security.auth as a ON u.id = a.user_id WHERE a.id = $1",
         "getAuthInfoByEmail": "SELECT id, email, password, auth_id FROM security.auth_info WHERE email = $1",
         "getUserRoles": "SELECT r.id as id, r.name as name FROM security.roles as r JOIN security.auth_roles as ar ON ar.role_id = r.id JOIN security.auth as a ON a.id = ar.auth_id WHERE a.id = $1",
+        "createRecoveryPasswordRecord": "SELECT * FROM security.create_recovery_password_record($1, $2, $3, $4)",
+        "changePasswordByRecover": "SELECT * FROM security.change_password_by_recovery($1, $2)",
         "registerUser": "SELECT * FROM security.register_user($1, $2, $3)",
         "session": {
           "getSessionById": "SELECT * FROM security.active_sessions WHERE id = $1",
@@ -19,6 +21,11 @@
           "createSession": "SELECT * FROM security.create_session($1, $2, $3)",
           "refreshSession": "UPDATE security.active_sessions SET at_jti = (SELECT uuid_generate_v4()), rt_jti = (SELECT uuid_generate_v4()), active = true, expires_at = (SELECT NOW() + $1), updated_at = (SELECT NOW()), last_activity = (SELECT NOW()) RETURNING *",
           "deleteSessionById": "DELETE FROM security.active_sessions WHERE id = $1"
+        },
+        "recovery": {
+          "getRecordByChangeToken": "SELECT * FROM security.auth_recovery WHERE change_token = $1",
+          "getRecordByVerificationToken": "SELECT * FROM security.auth_recovery WHERE verification_token = $1",
+          "removeConfirmationToken": "UPDATE security.auth_recovery SET verification_token = null WHERE verification_token = $1 RETURNING *"
         }
       },
       "profile": {}
@@ -35,6 +42,8 @@
         "getAuthByUserId": "",
         "getAuthInfoByEmail": "",
         "getUserRoles": "",
+        "createRecoveryPasswordRecord": "",
+        "changePasswordByRecover": "",
         "registerUser": "",
         "session": {
           "getSessionById": "",
@@ -44,6 +53,11 @@
           "createSession": "",
           "refreshSession": "",
           "deleteSessionById": ""
+        },
+        "recovery": {
+          "getRecordByChangeToken": "",
+          "getRecordByVerificationToken": "",
+          "removeConfirmationToken": ""
         }
       },
       "profile": {}
@@ -60,6 +74,8 @@
         "getAuthByUserId": "",
         "getAuthInfoByEmail": "",
         "getUserRoles": "",
+        "createRecoveryPasswordRecord": "",
+        "changePasswordByRecover": "",
         "registerUser": "",
         "session": {
           "getSessionById": "",
@@ -69,6 +85,11 @@
           "createSession": "",
           "refreshSession": "",
           "deleteSessionById": ""
+        },
+        "recovery": {
+          "getRecordByChangeToken": "",
+          "getRecordByVerificationToken": "",
+          "removeConfirmationToken": ""
         }
       },
       "profile": {}

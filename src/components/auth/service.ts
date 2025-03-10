@@ -16,7 +16,13 @@ import { DBDependenciesInjector } from "../../db/injector";
 import { DbQueries } from "../../db";
 
 import { LoginCredentials, RegisterCredentials } from "./types/credentials.dto";
-import { ActiveSession, Auth, AuthInfo, User } from "../../types/user.dto";
+import {
+  ActiveSession,
+  Auth,
+  AuthInfo,
+  AuthRecovery,
+  User,
+} from "../../types/user.dto";
 import { DBCommonsQuerys } from "../../lib/commons.querys";
 
 import type { Engine } from "../../db/injector/types/engine";
@@ -32,6 +38,8 @@ import {
 } from "../../security/jwt/types/jwt.dto";
 import { Roles } from "./types/roles.dto";
 import { CommonsResponses } from "../../responses/commons.responses";
+import { sendEmail } from "../../utils/send.email";
+import { CreateEmailResponseSuccess } from "resend";
 
 export class AuthService extends DBCommonsQuerys {
   private database: DBDependenciesInjector;
@@ -283,6 +291,87 @@ export class AuthService extends DBCommonsQuerys {
 
   async requestPasswordChange(email: string) {
     const existsEmail = await this.getInfoByEmail(email);
-    if (!existsEmail) return CommonsResponses.en[200].emailSent;
+    if (!existsEmail) throw notFound(CommonsResponses.en[404].email);
+
+    const authId = existsEmail.auth_id;
+
+    const authInfo = await this.database.query<Auth[]>(
+      this.queries.user.auth.getAuthInfoById,
+      [authId]
+    );
+    if (!authInfo.length) return CommonsResponses.en[200].emailSent;
+
+    if (
+      new Date().toISOString() <
+      new Date(authInfo[0].password_recovery_until).toISOString()
+    )
+      throw forbidden(CommonsResponses.en[403].notTime);
+
+    const changeToken = crypto.randomBytes(16).toString("base64url");
+    const verificationToken = crypto.randomBytes(24).toString("base64url");
+    const code = crypto.randomInt(1000000, 9999999);
+
+    const record = await this.database.query<AuthRecovery[]>(
+      this.queries.user.auth.createRecoveryPasswordRecord,
+      [authId, code, changeToken, verificationToken]
+    );
+    if (!record.length) throw badRequest(CommonsResponses.en[400].generic);
+
+    const recover = record[0];
+    const mail = await sendEmail(email);
+
+    return {
+      token: verificationToken,
+    };
+  }
+
+  async validateCode(token: string, code: number) {
+    const records = await this.database.query<AuthRecovery[]>(
+      this.queries.user.auth.recovery.getRecordByVerificationToken,
+      [token]
+    );
+    if (!records.length) throw unauthorized(CommonsResponses.en[401].generic);
+
+    const record = records[0];
+
+    if (new Date().toISOString() > new Date(record.expires_at).toISOString())
+      throw unauthorized(CommonsResponses.en[401].tokenExpired);
+
+    if (record.code !== code)
+      throw unauthorized(CommonsResponses.en[401].invalidCode);
+
+    const validated = await this.database.query<AuthRecovery[]>(
+      this.queries.user.auth.recovery.removeConfirmationToken,
+      [token]
+    );
+    if (!validated.length) throw unauthorized(CommonsResponses.en[401].generic);
+
+    const valid = validated[0];
+    const changeToken = valid.change_token;
+
+    return {
+      token: changeToken,
+    };
+  }
+
+  async confirmPasswordChange(token: string, password: string) {
+    const records = await this.database.query<AuthRecovery[]>(
+      this.queries.user.auth.recovery.getRecordByChangeToken,
+      [token]
+    );
+    if (!records.length) throw unauthorized(CommonsResponses.en[401].generic);
+
+    const record = records[0];
+
+    if (new Date().toISOString() > new Date(record.expires_at).toISOString())
+      throw unauthorized(CommonsResponses.en[401].tokenExpired);
+
+    const hash = await bcrypt.hash(password, 10);
+
+    const recover = await this.database.query<AuthInfo[]>(
+      this.queries.user.auth.changePasswordByRecover,
+      [record.auth_id, hash]
+    );
+    if (!recover.length) throw internal(CommonsResponses.en[500].generic);
   }
 }
