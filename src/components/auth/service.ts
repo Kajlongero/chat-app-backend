@@ -38,8 +38,8 @@ import {
 } from "../../security/jwt/types/jwt.dto";
 import { Roles } from "./types/roles.dto";
 import { CommonsResponses } from "../../responses/commons.responses";
-import { sendEmail } from "../../utils/send.email";
-import { CreateEmailResponseSuccess } from "resend";
+import { sendMail } from "../../lib/mail/send.mail";
+import { passwordRecoveryTemplate } from "../../lib/mail/templates/password.recovery";
 
 export class AuthService extends DBCommonsQuerys {
   private database: DBDependenciesInjector;
@@ -302,8 +302,9 @@ export class AuthService extends DBCommonsQuerys {
     if (!authInfo.length) return CommonsResponses.en[200].emailSent;
 
     if (
+      authInfo[0].password_recovery_until &&
       new Date().toISOString() <
-      new Date(authInfo[0].password_recovery_until).toISOString()
+        new Date(authInfo[0].password_recovery_until).toISOString()
     )
       throw forbidden(CommonsResponses.en[403].notTime);
 
@@ -318,7 +319,10 @@ export class AuthService extends DBCommonsQuerys {
     if (!record.length) throw badRequest(CommonsResponses.en[400].generic);
 
     const recover = record[0];
-    const mail = await sendEmail(email);
+    const mail = await sendMail(
+      email,
+      passwordRecoveryTemplate({ code: recover.code })
+    );
 
     return {
       token: verificationToken,
@@ -334,11 +338,20 @@ export class AuthService extends DBCommonsQuerys {
 
     const record = records[0];
 
+    if (record.attempts > 5)
+      throw unauthorized(CommonsResponses.en[401].tokenExpired);
+
     if (new Date().toISOString() > new Date(record.expires_at).toISOString())
       throw unauthorized(CommonsResponses.en[401].tokenExpired);
 
-    if (record.code !== code)
+    if (record.code !== code) {
+      await this.database.query(
+        this.queries.user.auth.recovery.incrementAttempts,
+        [record.attempts + 1]
+      );
+
       throw unauthorized(CommonsResponses.en[401].invalidCode);
+    }
 
     const validated = await this.database.query<AuthRecovery[]>(
       this.queries.user.auth.recovery.removeConfirmationToken,
@@ -359,6 +372,7 @@ export class AuthService extends DBCommonsQuerys {
       this.queries.user.auth.recovery.getRecordByChangeToken,
       [token]
     );
+    console.log(records);
     if (!records.length) throw unauthorized(CommonsResponses.en[401].generic);
 
     const record = records[0];
@@ -372,6 +386,10 @@ export class AuthService extends DBCommonsQuerys {
       this.queries.user.auth.changePasswordByRecover,
       [record.auth_id, hash]
     );
+    console.log(recover);
+
     if (!recover.length) throw internal(CommonsResponses.en[500].generic);
+
+    return true;
   }
 }

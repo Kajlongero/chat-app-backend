@@ -4,7 +4,7 @@ import { RSAKeyPairOptions } from "node:crypto";
 
 import { badData } from "@hapi/boom";
 
-import { AuthConfigs } from "../configs";
+import { authConfigs } from "../configs";
 import { KeyPair, SECURITY_LEVEL, SECURITY_SIZE } from "../types/security.dto";
 
 const keyPair = promisify(generateKeyPair);
@@ -19,7 +19,7 @@ const getOpts = (level: SECURITY_SIZE): RSAKeyPairOptions<"pem", "pem"> => ({
     type: "pkcs8",
     format: "pem",
     cipher: "aes-256-cbc",
-    passphrase: AuthConfigs.RSA_KEY_PAIR_PASSPHRASE,
+    passphrase: authConfigs.RSA_KEY_PAIR_PASSPHRASE,
   },
 });
 

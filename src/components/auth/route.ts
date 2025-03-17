@@ -1,16 +1,13 @@
-import fs from "fs";
-import path from "path";
 import passport from "passport";
 
 import { Router } from "express";
 
-import { keysDir } from "../../keys";
 import { DBPostgres } from "../../db";
 import { AuthService } from "./service";
 import { SuccessResponse } from "../../responses/success.responses";
 import { ValidateJoiSchema } from "../../middlewares/joi.validator";
 import { RefreshTokenMiddleware } from "../../middlewares/refresh.token.validator";
-import { loginSchema, registerSchema } from "./model";
+import { loginSchema, recoverPasswordSchema, registerSchema } from "./model";
 
 import { CredentialsAuthResponse } from "./types/responses.dto";
 import { LoginCredentials, RegisterCredentials } from "./types/credentials.dto";
@@ -18,21 +15,16 @@ import {
   AccessTokenPayload,
   RefreshTokenPayload,
 } from "../../security/jwt/types/jwt.dto";
-
-const publicKey = fs.readFileSync(path.join(keysDir, "public", "public.pem"));
+import { RSAKeysLoaders } from "../../utils/rsa.keys.loaders";
 
 const AuthRouter = Router();
 const authService = new AuthService(DBPostgres, "postgres");
 
 AuthRouter.get("/public-key", (req, res, next) => {
   try {
-    const strKey = Buffer.from(publicKey).toString("utf-8");
-    const parsed = strKey
-      .replace("-----BEGIN PUBLIC KEY-----", "")
-      .replace("-----END PUBLIC KEY-----", "")
-      .replaceAll("\n", "");
+    const key = RSAKeysLoaders.publicKey;
 
-    SuccessResponse(req, res, { publicKey: parsed });
+    SuccessResponse(req, res, { publicKey: key });
   } catch (error) {
     next(error);
   }
@@ -82,6 +74,46 @@ AuthRouter.post(
     }
   }
 );
+
+AuthRouter.post(
+  "/recovery-request-password-change",
+  ValidateJoiSchema(recoverPasswordSchema, "body"),
+  async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      const change = await authService.requestPasswordChange(email);
+
+      SuccessResponse(req, res, change);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+AuthRouter.post(
+  "/recovery-validate-password-change-code",
+  async (req, res, next) => {
+    try {
+      const { code, token } = req.body;
+      const valid = await authService.validateCode(token, code);
+
+      SuccessResponse(req, res, valid);
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+AuthRouter.post("/recovery-password-change", async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    const changed = await authService.confirmPasswordChange(token, password);
+
+    SuccessResponse(req, res, changed);
+  } catch (error) {
+    next(error);
+  }
+});
 
 AuthRouter.post(
   "/close-session",

@@ -17,6 +17,8 @@ export const BoomErrorsHandler = (
   res: Response,
   next: NextFunction
 ): Response | void => {
+  console.error(err);
+
   if (Boom.isBoom(err)) {
     const { output } = err;
     return res.status(output.statusCode).json(output.payload);

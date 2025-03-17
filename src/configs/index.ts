@@ -8,22 +8,29 @@ const {
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET,
   RSA_KEY_PAIR_PASSPHRASE,
-  RESEND_API_KEY,
-  EMAIL_TO_SEND_MAIL,
+  MAIL_FROM,
+  MAIL_PASS,
+  MAIL_HOST,
+  MAIL_PORT,
 } = process.env;
 
-export const ServerConfigs = {
+export const serverConfigs = {
   SERVER_PORT: parseInt(SERVER_PORT as string),
-  RESEND_API_KEY,
-  EMAIL_TO_SEND_MAIL,
 };
 
-export const AuthConfigs = {
+export const authConfigs = {
   ACCESS_TOKEN_SECRET: ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET: REFRESH_TOKEN_SECRET,
   RSA_KEY_PAIR_PASSPHRASE: RSA_KEY_PAIR_PASSPHRASE,
 };
 
-export const DbConfigs = {
+export const dbConfigs = {
   DB_CONNECTION_STRING,
+};
+
+export const mailConfigs = {
+  MAIL_FROM,
+  MAIL_PASS,
+  MAIL_PORT,
+  MAIL_HOST,
 };

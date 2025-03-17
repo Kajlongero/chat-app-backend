@@ -1,3 +1,4 @@
+import path from "path";
 import cors from "cors";
 import express from "express";
 import passport from "passport";
@@ -21,15 +22,20 @@ import {
   ServerErrorsHandler,
 } from "./middlewares/errors.validator";
 
-import { ServerConfigs } from "./configs/index";
+import { serverConfigs } from "./configs/index";
 import { CorsOpts } from "./configs/cors";
 
 import { writeKeys } from "./security/write.keys";
+import { RSAKeysLoaders } from "./utils/rsa.keys.loaders";
 
 writeKeys("HIGH");
 
+RSAKeysLoaders.getInstance();
+
 const app = express();
 const httpServer = createServer(app);
+
+app.use("/statics", express.static(path.join(__dirname, "public")));
 
 app.use(cors(CorsOpts));
 app.use(express.json());
@@ -46,6 +52,6 @@ io.on("connection", (socket) => {});
 
 export { app };
 
-httpServer.listen(ServerConfigs.SERVER_PORT, () => {
-  console.log(`Listening at port: ${ServerConfigs.SERVER_PORT}`);
+httpServer.listen(serverConfigs.SERVER_PORT, () => {
+  console.log(`Listening at port: ${serverConfigs.SERVER_PORT}`);
 });

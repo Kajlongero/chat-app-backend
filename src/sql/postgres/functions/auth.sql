@@ -90,11 +90,12 @@ CREATE OR REPLACE FUNCTION security.create_recovery_password_record (
 AS $$ 
 DECLARE 
   t_id UUID;
+  t_time_w_interval TIMESTAMPTZ;
 BEGIN
   t_time_w_interval := NOW() + '30 min';
 
-  INSERT INTO security.auth_recovery(auth_id, code, change_token, verification_token)
-  VALUES (p_auth_id, p_code, p_change_token, p_verification_token)
+  INSERT INTO security.auth_recovery(auth_id, code, change_token, verification_token, expires_at)
+  VALUES (p_auth_id, p_code, p_change_token, p_verification_token, t_time_w_interval)
   RETURNING id INTO t_id;
 
   RETURN QUERY SELECT * FROM security.auth_recovery WHERE id = t_id;

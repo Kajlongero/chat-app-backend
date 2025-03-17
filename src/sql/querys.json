@@ -20,11 +20,13 @@
           "getSessionByAuthId": "SELECT * FROM security.active_sessions WHERE auth_id = $1",
           "createSession": "SELECT * FROM security.create_session($1, $2, $3)",
           "refreshSession": "UPDATE security.active_sessions SET at_jti = (SELECT uuid_generate_v4()), rt_jti = (SELECT uuid_generate_v4()), active = true, expires_at = (SELECT NOW() + $1), updated_at = (SELECT NOW()), last_activity = (SELECT NOW()) RETURNING *",
-          "deleteSessionById": "DELETE FROM security.active_sessions WHERE id = $1"
+          "deleteSessionById": "DELETE FROM security.active_sessions WHERE id = $1",
+          "closeAllSessions": "DELETE FROM security.active_sessions WHERE auth_id = $1"
         },
         "recovery": {
           "getRecordByChangeToken": "SELECT * FROM security.auth_recovery WHERE change_token = $1",
           "getRecordByVerificationToken": "SELECT * FROM security.auth_recovery WHERE verification_token = $1",
+          "incrementAttempts": "UPDATE security.auth_recovery SET attempts = null WHERE auth_id = $1 RETURNING *",
           "removeConfirmationToken": "UPDATE security.auth_recovery SET verification_token = null WHERE verification_token = $1 RETURNING *"
         }
       },
@@ -52,11 +54,13 @@
           "getSessionByAuthId": "",
           "createSession": "",
           "refreshSession": "",
-          "deleteSessionById": ""
+          "deleteSessionById": "",
+          "closeAllSessions": ""
         },
         "recovery": {
           "getRecordByChangeToken": "",
           "getRecordByVerificationToken": "",
+          "incrementAttempts": "",
           "removeConfirmationToken": ""
         }
       },
@@ -84,11 +88,13 @@
           "getSessionByAuthId": "",
           "createSession": "",
           "refreshSession": "",
-          "deleteSessionById": ""
+          "deleteSessionById": "",
+          "closeAllSessions": ""
         },
         "recovery": {
           "getRecordByChangeToken": "",
           "getRecordByVerificationToken": "",
+          "incrementAttempts": "",
           "removeConfirmationToken": ""
         }
       },

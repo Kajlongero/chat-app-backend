@@ -248,4 +248,46 @@ describe("POST /api/v1/auth/*", () => {
     expect(del.status).toBe(200);
     expect(del.headers["content-type"]).toBe("application/json; charset=utf-8");
   });
+
+  it("should recover and change the password and should login with the new one", async () => {
+    const req = await request(app)
+      .post("/api/v1/auth/recovery-request-password-change")
+      .send({
+        email: authMocks.login.correct.email,
+      });
+
+    const reqToken = req.body.data.token;
+    const reqCode = req.body.data.code;
+
+    const vef = await request(app)
+      .post("/api/v1/auth/recovery-validate-password-change-code")
+      .send({
+        code: reqCode,
+        token: reqToken,
+      });
+
+    const vefToken = vef.body.data.token;
+    const password = authMocks.login.correct.password;
+
+    const changed = await request(app)
+      .post("/api/v1/auth/recovery-password-change")
+      .send({
+        token: vefToken,
+        password: password,
+      });
+
+    const login = await request(app)
+      .post("/api/v1/auth/log-in")
+      .send(authMocks.login.correct);
+
+    expect(login.statusCode).toBe(200);
+    expect(login.headers["content-type"]).toBe(
+      "application/json; charset=utf-8"
+    );
+    expect(changed.statusCode).toBe(200);
+    expect(changed.body.data).toBe(true);
+    expect(changed.headers["content-type"]).toBe(
+      "application/json; charset=utf-8"
+    );
+  });
 });

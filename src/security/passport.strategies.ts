@@ -4,22 +4,22 @@ import {
   StrategyOptionsWithoutRequest,
 } from "passport-jwt";
 
-import { AuthConfigs } from "../configs/index";
+import { authConfigs } from "../configs/index";
 
 // Jwt Strategies
 
 const AccessJwtBearerOpts: StrategyOptionsWithoutRequest = {
-  secretOrKey: AuthConfigs.ACCESS_TOKEN_SECRET as string,
+  secretOrKey: authConfigs.ACCESS_TOKEN_SECRET as string,
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 };
 
 const RefreshJwtBodyOpts: StrategyOptionsWithoutRequest = {
-  secretOrKey: AuthConfigs.REFRESH_TOKEN_SECRET as string,
+  secretOrKey: authConfigs.REFRESH_TOKEN_SECRET as string,
   jwtFromRequest: ExtractJwt.fromBodyField("refreshToken"),
 };
 
 const RefreshJwtHeaderOpts: StrategyOptionsWithoutRequest = {
-  secretOrKey: AuthConfigs.REFRESH_TOKEN_SECRET as string,
+  secretOrKey: authConfigs.REFRESH_TOKEN_SECRET as string,
   jwtFromRequest: ExtractJwt.fromHeader("X-Refresh-Token"),
 };
 
